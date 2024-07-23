@@ -14,9 +14,6 @@ namespace BookApi.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // Configurations supplémentaires (si nécessaire)
-            modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
         }
     }
 }
