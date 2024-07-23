@@ -1,11 +1,43 @@
 using Microsoft.EntityFrameworkCore;
 using BookApi.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using DotNetEnv;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//env loading
+Env.Load();
+
+var key = Encoding.ASCII.GetBytes(Env.GetString("JWT_KEY") ?? "VotreCléSecrèteTrèsSécurisée");
 // Add services to the container.
 
-builder.Services.AddControllers();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false, // Pas d'issuer
+        ValidateAudience = false, // Pas d'audience
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<UserIdFilter>();
+});
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
 
@@ -23,6 +55,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
