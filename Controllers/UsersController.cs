@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using BookApi.Data;
+using BookApi.Helpers;
+using Microsoft.EntityFrameworkCore;
 using BookApi.Models;
 
 namespace BookApi.Controllers
@@ -7,42 +10,48 @@ namespace BookApi.Controllers
     [Route("[controller]")]
     public class UsersController : ControllerBase
     {
-        private static readonly List<User> users = [];
+        private readonly AppDbContext _context;
+        private readonly PasswordHasher _passwordHasher = new();
+
+        public UsersController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpPost("register", Name = "RegisterUser")]        
-        public IActionResult Register([FromBody] UserDto userDto)
+        public async Task<IActionResult> Register([FromBody] UserDto userDto)
         {
-            if (users.Any(u => u.Username == userDto.Username))
+            if (_context.Users.Any(u => u.Username == userDto.Username) || _context.Users.Any(u => u.Email == userDto.Email))
             {
                 return BadRequest("User already exists");
             }
 
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+            var passwordHash = _passwordHasher.HashPassword(userDto.Password);
 
             var user = new User
             {
-                Id = users.Count + 1,
                 FullName = userDto.FullName,
                 Email = userDto.Email,
                 Username = userDto.Username,
                 Password = passwordHash
             };
 
-            users.Add(user);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
 
             return Ok("User registered successfully");
         }
 
         [HttpPost("login", Name = "LoginUser")]
-        public IActionResult Login([FromBody] LoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            var user = users.SingleOrDefault(u => u.Username == loginDto.Username);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == loginDto.Username);
             if (user == null)
             {
                 return BadRequest("Invalid username");
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password))
+            if (!_passwordHasher.VerifyPassword(loginDto.Password, user.Password))
             {
                 return BadRequest("Invalid password");
             }
