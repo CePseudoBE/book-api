@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BookApi.Models
 {
@@ -24,5 +23,7 @@ namespace BookApi.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<User>? Users { get; set; }
+
+        public required Author Author {get; set;}
     }
 }
