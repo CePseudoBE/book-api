@@ -4,7 +4,7 @@ using BookApi.Helpers;
 using Microsoft.EntityFrameworkCore;
 using BookApi.Models;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
+using BookApi.Validator;
 
 namespace BookApi.Controllers
 {
@@ -22,7 +22,7 @@ namespace BookApi.Controllers
         }
 
         [HttpPost("register", Name = "RegisterUser")]
-        public async Task<IActionResult> Register([FromBody] UserDto userDto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto userDto)
         {
             if (_context.Users.Any(u => u.Username == userDto.Username) || _context.Users.Any(u => u.Email == userDto.Email))
             {
@@ -84,19 +84,48 @@ namespace BookApi.Controllers
 
             return Ok(new { user.FullName, user.Email, user.Username });
         }
+
+        [Authorize]
+        [HttpGet("", Name = "UsersList")]
+        public async Task<IActionResult> GetUsersList()
+        {
+            var users = await _context.Users
+                .Select(u => new
+                {
+                    Id = u.Id,
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    Username = u.Username
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+        [Authorize]
+        [HttpGet("{id:int}", Name = "GetUserById")]
+        public async Task<IActionResult> GetUserById(int id){
+            var user = await _context.Users
+                .Where(u => u.Id == id)
+                .Select(u => new UserDto
+                    {
+                        Id = u.Id,
+                        FullName = u.FullName,
+                        Email = u.Email,
+                        Username = u.Username
+                    })
+                    .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(user);
+        }
     }
 
-    public class UserDto
-    {
-        public required string FullName { get; set; }
-        public required string Email { get; set; }
-        public required string Username { get; set; }
-        public required string Password { get; set; }
-    }
+    
 
-    public class LoginDto
-    {
-        public required string Username { get; set; }
-        public required string Password { get; set; }
-    }
+    
 }
