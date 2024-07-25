@@ -16,6 +16,7 @@ namespace BookApi.Controllers
         private readonly AppDbContext _context = context;
         private readonly PasswordHasher _passwordHasher = new();
         private readonly JWTHelper _jwtHelper = new();
+        private readonly EmailHelper _emailHelper = new();
 
         [HttpPost("register", Name = "RegisterUser")]
         public async Task<IActionResult> Register([FromBody] RegisterDto userDto)
@@ -79,7 +80,10 @@ namespace BookApi.Controllers
             if (passwordReset != null && passwordReset.Active && passwordReset.ExpiresAt > DateTime.UtcNow)
             {
                 FormattableString toSend = $"Hello {user.FullName}, click here to reset your password : {request.RedirectUrl}/?token={passwordReset.Token}";
-                return Ok(new { Token = passwordReset.Token });
+
+                _emailHelper.SendEmail("Book Application", "infofin@ulb.be", user.FullName, user.Email, "Reset password", toSend.ToString());
+                
+                return Ok("Email envoyé");
             }
 
             var newToken = new PasswordReset
@@ -99,7 +103,9 @@ namespace BookApi.Controllers
 
             FormattableString stringToSend = $"Hello {user.FullName}, click here to reset your password : {request.RedirectUrl}/?token={newToken.Token}";
 
-            return Ok(new { Token = newToken.Token });
+            _emailHelper.SendEmail("Book Application", "infofin@ulb.be", user.FullName, user.Email, "Reset password", stringToSend.ToString());
+
+            return Ok("Email envoyé");
         }
 
         
