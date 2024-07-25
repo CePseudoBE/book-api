@@ -26,5 +26,7 @@ namespace BookApi.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<Book>? Books { get; set; }
+
+        public ICollection<Review>? Reviews { get; set; }
     }
 }

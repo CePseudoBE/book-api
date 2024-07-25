@@ -24,8 +24,10 @@ namespace BookApi.Models
 
         public ICollection<User>? Users { get; set; }
 
-        public required string AuthorId {get; set;}
+        public required int AuthorId {get; set;}
 
         public required Author Author {get; set;}
+        
+        public ICollection<Review>? Reviews { get; set; }
     }
 }

@@ -26,6 +26,16 @@ namespace BookApi.Data
                 .HasOne(b => b.Author)
                 .WithMany(a => a.Books)
                 .HasForeignKey(b => b.AuthorId);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(b => b.Book)
+                .WithMany(a => a.Reviews)
+                .HasForeignKey(b => b.BookId);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(b => b.User)
+                .WithMany(a => a.Reviews)
+                .HasForeignKey(b => b.UserId);        
         }
     }
 }
