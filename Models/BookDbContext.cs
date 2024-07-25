@@ -21,6 +21,11 @@ namespace BookApi.Data
                 .HasMany(u => u.Books)
                 .WithMany(b => b.Users)
                 .UsingEntity(j => j.ToTable("user_book"));
+
+            modelBuilder.Entity<Book>()
+                .HasOne(b => b.Author)
+                .WithMany(a => a.Books)
+                .HasForeignKey(b => b.AuthorId);
         }
     }
 }
