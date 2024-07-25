@@ -12,10 +12,16 @@ namespace BookApi.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<PasswordReset> PasswordResets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PasswordReset>()
+                .HasIndex(pr => pr.Token)
+                .IsUnique();
             
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Books)
@@ -29,13 +35,18 @@ namespace BookApi.Data
 
             modelBuilder.Entity<Review>()
                 .HasOne(b => b.Book)
-                .WithMany(a => a.Reviews)
+                .WithMany(r => r.Reviews)
                 .HasForeignKey(b => b.BookId);
 
             modelBuilder.Entity<Review>()
-                .HasOne(b => b.User)
-                .WithMany(a => a.Reviews)
-                .HasForeignKey(b => b.UserId);        
+                .HasOne(r => r.User)
+                .WithMany(u => u.Reviews)
+                .HasForeignKey(r => r.UserId);
+
+            modelBuilder.Entity<PasswordReset>()
+                .HasOne(pr => pr.User)
+                .WithMany(a => a.PasswordResets)
+                .HasForeignKey(pr => pr.UserId);        
         }
     }
 }

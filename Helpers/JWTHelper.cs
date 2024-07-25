@@ -13,7 +13,6 @@ namespace BookApi.Helpers
         
         public JWTHelper()
         {
-            // Load environment variables
             Env.Load();
             _key = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new ArgumentNullException("JWT_KEY not found in environment variables");
         }

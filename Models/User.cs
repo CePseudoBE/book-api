@@ -28,5 +28,7 @@ namespace BookApi.Models
         public ICollection<Book>? Books { get; set; }
 
         public ICollection<Review>? Reviews { get; set; }
+        
+        public ICollection<PasswordReset>? PasswordResets { get; set; }
     }
 }
