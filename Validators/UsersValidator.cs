@@ -21,10 +21,16 @@ namespace BookApi.Validator{
         public required string Username { get; set; }
     }
 
-    public class ResetPasswordRequest
+    public class ResetPasswordDto
     {
         public required string Token { get; set; }
         public required string NewPassword { get; set; }
     }
 
+    public class AskTokenDto
+    {
+        public required string Email {get; set;}
+
+        public required string RedirectUrl {get; set;}
+    }
 }

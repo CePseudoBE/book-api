@@ -61,9 +61,50 @@ namespace BookApi.Controllers
 
             return Ok(new { Token = token });
         }
+
+        [HttpPost("ask-reset")]//todo email
+        public async Task<IActionResult> AskForToken([FromBody] AskTokenDto request){
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == request.Email);
+
+            if (user == null)
+            {
+                return BadRequest("User not found");
+            }
+
+            var passwordReset = await _context.PasswordResets
+                .Where(pr => pr.UserId == user.Id)
+                .OrderByDescending(pr => pr.CreatedAt)
+                .FirstOrDefaultAsync();
+            
+            if (passwordReset != null && passwordReset.Active && passwordReset.ExpiresAt > DateTime.UtcNow)
+            {
+                FormattableString toSend = $"Hello {user.FullName}, click here to reset your password : {request.RedirectUrl}/?token={passwordReset.Token}";
+                return Ok(new { Token = passwordReset.Token });
+            }
+
+            var newToken = new PasswordReset
+            {
+                Token = Guid.NewGuid().ToString(),
+                UserId = user.Id,
+                User = user,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+                Active = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            
+            _context.PasswordResets.Add(newToken);
+            await _context.SaveChangesAsync();
+
+            FormattableString stringToSend = $"Hello {user.FullName}, click here to reset your password : {request.RedirectUrl}/?token={newToken.Token}";
+
+            return Ok(new { Token = newToken.Token });
+        }
+
         
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
         {
             if (request == null || string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.NewPassword))
             {

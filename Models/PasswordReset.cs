@@ -12,7 +12,7 @@ namespace BookApi.Models
         public required string Token { get; set; }
 
         [Required]
-        public required string UserId { get; set; }
+        public required int UserId { get; set; }
 
         public required User User { get; set; }
 
