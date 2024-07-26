@@ -4,16 +4,16 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using DotNetEnv;
 using System.Text;
+using BookApi.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//env loading
+// Load environment variables
 Env.Load();
 
 var key = Encoding.ASCII.GetBytes(Env.GetString("JWT_KEY") ?? "VotreCléSecrèteTrèsSécurisée");
+
 // Add services to the container.
-
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -27,8 +27,8 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false, // Pas d'issuer
-        ValidateAudience = false, // Pas d'audience
+        ValidateIssuer = false, // No issuer
+        ValidateAudience = false, // No audience
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -41,6 +41,11 @@ builder.Services.AddControllers(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
 
+// Register the LoggingHelper
+builder.Services.AddSingleton<LoggingHelper>();
+
+// Register the EmailHelper
+builder.Services.AddTransient<EmailHelper>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

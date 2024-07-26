@@ -45,3 +45,5 @@ bld/
 *.tlog
 *.log
 .env
+
+.fake
