@@ -24,13 +24,22 @@ namespace BookApi.Controllers
                 return Unauthorized();
             }
 
-            var user = await _context.Users.FindAsync(int.Parse(userId));
+            var user = await _context.Users
+                .Include(u => u.Books)
+                .Include(u => u.Reviews).FirstOrDefaultAsync(u => u.Id == int.Parse(userId));
             if (user == null)
             {
                 return NotFound();
             }
 
-            return Ok(new { user.FullName, user.Email, user.Username });
+            return Ok(new 
+                { 
+                    user.FullName, 
+                    user.Email, 
+                    user.Username, 
+                    Books = user.Books?.Select(b => new { b.Id, b.Title, b.ISBN }), 
+                    Reviews = user.Reviews?.Select(r => new { r.Id, r.Note, r.Thought }) 
+                });
         }
 
         [Authorize]
