@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using BookApi.Data;
 using BookApi.Helpers;
-using Microsoft.EntityFrameworkCore;
-using BookApi.Models;
 using BookApi.Validator;
-using System;
-using System.Threading.Tasks;
+using Microsoft.Net.Http.Headers;
+using System.Text.Json;
 
 namespace BookApi.Controllers
 {
@@ -15,24 +13,47 @@ namespace BookApi.Controllers
     {
         private readonly AppDbContext _context;
         private readonly LoggingHelper _loggingHelper;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public BookController(AppDbContext context, LoggingHelper loggingHelper)
+
+        public BookController(AppDbContext context, LoggingHelper loggingHelper, IHttpClientFactory httpClientFactory)
         {
             _context = context;
             _loggingHelper = loggingHelper;
+            _httpClientFactory = httpClientFactory;
         }
 
         [HttpPost("", Name = "CreateBooks")]
-        public IActionResult Create([FromBody] BookDto request)
+        public async Task<IActionResult> Create([FromBody] BookDto request)
         {
             try
             {
-                _loggingHelper.LogInformation(request.ISBN);
-                return Ok("test");
+                var httpRequestMessage = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    $"https://www.googleapis.com/books/v1/volumes?q=isbn:{request.ISBN}")
+                {
+                    Headers =
+                    {
+                        { HeaderNames.Accept, "application/+json" },
+                        { HeaderNames.UserAgent, "HttpRequestsSample" }
+                    }
+                };
+                var httpClient = _httpClientFactory.CreateClient();
+                var httpResponseMessage = await httpClient.SendAsync(httpRequestMessage);
+
+                if (httpResponseMessage.IsSuccessStatusCode)
+                {
+                    using var contentStream =
+                        await httpResponseMessage.Content.ReadAsStreamAsync();
+                    
+                    var googleBooksResponse = await JsonSerializer.DeserializeAsync<GoogleBooksResponse>(contentStream);
+                    return Ok(googleBooksResponse);
+                }
+                return Ok("non");
             }
             catch (Exception ex)
             {
-                _loggingHelper.LogError(ex, "An error occurred while registering the user.");
+                _loggingHelper.LogError(ex, "An error occurred while creating a book.");
                 return StatusCode(500, "Internal server error");
             }
         }

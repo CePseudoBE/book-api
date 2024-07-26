@@ -38,6 +38,8 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<UserIdFilter>();
 });
 
+builder.Services.AddHttpClient();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
 
