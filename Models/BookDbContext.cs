@@ -11,6 +11,7 @@ namespace BookApi.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Book> Books { get; set; }
+        public DbSet<UserBook> UserBooks { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
@@ -23,10 +24,20 @@ namespace BookApi.Data
                 .HasIndex(pr => pr.Token)
                 .IsUnique();
             
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Books)
-                .WithMany(b => b.Users)
-                .UsingEntity(j => j.ToTable("user_book"));
+             modelBuilder.Entity<UserBook>()
+                .HasOne(ub => ub.User)
+                .WithMany(u => u.UserBooks)
+                .HasForeignKey(ub => ub.UserId);
+
+            modelBuilder.Entity<UserBook>()
+                .HasOne(ub => ub.Book)
+                .WithMany(b => b.UserBooks)
+                .HasForeignKey(ub => ub.BookId);
+
+            modelBuilder.Entity<Genre>()
+                .HasMany(g => g.Books)
+                .WithMany(b => b.Genres)
+                .UsingEntity(j => j.ToTable("book_genre"));
 
             modelBuilder.Entity<Book>()
                 .HasOne(b => b.Author)

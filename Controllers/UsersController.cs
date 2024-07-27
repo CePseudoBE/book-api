@@ -25,8 +25,11 @@ namespace BookApi.Controllers
             }
 
             var user = await _context.Users
-                .Include(u => u.Books)
-                .Include(u => u.Reviews).FirstOrDefaultAsync(u => u.Id == int.Parse(userId));
+                .Include(u => u.UserBooks!)
+                    .ThenInclude(ub => ub.Book)
+                .Include(u => u.Reviews)
+                .FirstOrDefaultAsync(u => u.Id == int.Parse(userId));
+
             if (user == null)
             {
                 return NotFound();
@@ -37,10 +40,13 @@ namespace BookApi.Controllers
                     user.FullName, 
                     user.Email, 
                     user.Username, 
-                    Books = user.Books?.Select(b => new { b.Id, b.Title, b.ISBN }), 
+                    Books = user.UserBooks?.Select(ub => new { ub.Book.Id, ub.Book.Title, ub.Book.ISBN, ub.IsRead }), 
                     Reviews = user.Reviews?.Select(r => new { r.Id, r.Note, r.Thought }) 
                 });
         }
+
+
+
 
         [Authorize]
         [HttpGet("", Name = "UsersList")]
